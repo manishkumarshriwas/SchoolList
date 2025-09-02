@@ -1,5 +1,4 @@
 'use client';
-
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
@@ -25,27 +24,37 @@ const AddSchool = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       [name]: value,
-    });
+    }));
     
     if (errors[name]) {
-      setErrors({
-        ...errors,
+      setErrors(prev => ({
+        ...prev,
         [name]: '',
-      });
+      }));
     }
   };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Validate file type
       if (!file.type.match('image.*')) {
-        setErrors({
-          ...errors,
+        setErrors(prev => ({
+          ...prev,
           image: 'Please select an image file',
-        });
+        }));
+        return;
+      }
+      
+      // Validate file size (10MB max)
+      if (file.size > 10 * 1024 * 1024) {
+        setErrors(prev => ({
+          ...prev,
+          image: 'Image size must be less than 10MB',
+        }));
         return;
       }
       
@@ -57,10 +66,10 @@ const AddSchool = () => {
       reader.readAsDataURL(file);
       
       if (errors.image) {
-        setErrors({
-          ...errors,
+        setErrors(prev => ({
+          ...prev,
           image: '',
-        });
+        }));
       }
     }
   };
@@ -75,7 +84,7 @@ const AddSchool = () => {
     
     if (!formData.contact.trim()) {
       newErrors.contact = 'Contact number is required';
-    } else if (formData.contact.length !== 10 || isNaN(formData.contact)) {
+    } else if (!/^\d{10}$/.test(formData.contact)) {
       newErrors.contact = 'Contact number must be 10 digits';
     }
     
@@ -336,24 +345,24 @@ const AddSchool = () => {
               </div>
               
               <div className="pt-6 flex justify-center">
-  <button
-    type="submit"
-    disabled={isSubmitting}
-    className="disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center w-64 px-6 py-3 rounded-full font-medium text-white shadow-lg transform transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 bg-gradient-to-r from-pink-500 via-red-500 to-orange-500 hover:from-pink-600 hover:via-red-600 hover:to-orange-600"
-  >
-    {isSubmitting ? (
-      <>
-        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        Adding School...
-      </>
-    ) : (
-      'Add School'
-    )}
-  </button>
-</div>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center w-64 px-6 py-3 rounded-full font-medium text-white shadow-lg transform transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Adding School...
+                    </>
+                  ) : (
+                    'Add School'
+                  )}
+                </button>
+              </div>
             </form>
           </div>
         </motion.div>
