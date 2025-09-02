@@ -2,11 +2,9 @@ import { query } from '@/lib/db';
 import { writeFile } from 'fs/promises';
 import path from 'path';
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+// For App Router, we don't need the config export
+// Instead, we specify the runtime if needed
+export const runtime = 'nodejs';
 
 const saveFile = async (file) => {
   const data = Buffer.from(await file.arrayBuffer());
@@ -15,17 +13,18 @@ const saveFile = async (file) => {
   
   // Create directory if it doesn't exist
   const dir = path.dirname(filePath);
-  if (!require('fs').existsSync(dir)) {
-    require('fs').mkdirSync(dir, { recursive: true });
+  const fs = require('fs');
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
   }
   
   await writeFile(filePath, data);
   return `/schoolImages/${fileName}`;
 };
 
-export async function POST(req) {
+export async function POST(request) {
   try {
-    const formData = await req.formData();
+    const formData = await request.formData();
     
     // Extract form fields
     const name = formData.get('name');
