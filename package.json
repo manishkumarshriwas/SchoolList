@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
+    "init-db": "node src/lib/init-db.js"
+
   },
   "dependencies": {
     "busboy": "^1.6.0",

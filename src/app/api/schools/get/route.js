@@ -11,39 +11,41 @@ export async function GET(req) {
     const limit = parseInt(searchParams.get('limit')) || 10;
     const offset = (page - 1) * limit;
     
-    let sql = 'SELECT * FROM schools WHERE 1=1';
-    let params = [];
+    // Build WHERE clause dynamically
+    let whereClause = '';
+    let countWhereClause = '';
     
     if (search) {
-      sql += ' AND (name LIKE ? OR address LIKE ?)';
-      const searchTerm = `%${search}%`;
-      params.push(searchTerm, searchTerm);
+      const searchEscaped = `%${search}%`;
+      whereClause += ` AND (name LIKE '${searchEscaped}' OR address LIKE '${searchEscaped}')`;
+      countWhereClause += ` AND (name LIKE '${searchEscaped}' OR address LIKE '${searchEscaped}')`;
     }
     
     if (city) {
-      sql += ' AND city = ?';
-      params.push(city);
+      whereClause += ` AND city = '${city}'`;
+      countWhereClause += ` AND city = '${city}'`;
     }
     
     if (state) {
-      sql += ' AND state = ?';
-      params.push(state);
+      whereClause += ` AND state = '${state}'`;
+      countWhereClause += ` AND state = '${state}'`;
     }
     
     // Get total count for pagination
-    let countSql = sql.replace('SELECT * FROM', 'SELECT COUNT(*) as total FROM');
-    const countResult = await query({ query: countSql, values: [...params] });
+    const countSql = `SELECT COUNT(*) as total FROM schools WHERE 1=1 ${countWhereClause}`;
+    const countResult = await query({ 
+      query: countSql,
+      values: []
+    });
     const total = countResult[0].total;
     const totalPages = Math.ceil(total / limit);
     
-    // Add pagination to the main query
-    sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-    params.push(limit, offset);
+    // Get schools with pagination
+    const sql = `SELECT * FROM schools WHERE 1=1 ${whereClause} ORDER BY id DESC LIMIT ${limit} OFFSET ${offset}`;
     
-    // Only pass params if there are any
     const schools = await query({
       query: sql,
-      values: params.length > 0 ? params : []
+      values: []
     });
     
     return Response.json({

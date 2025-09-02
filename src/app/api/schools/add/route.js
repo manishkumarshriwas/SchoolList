@@ -8,6 +8,21 @@ export const config = {
   },
 };
 
+const saveFile = async (file) => {
+  const data = Buffer.from(await file.arrayBuffer());
+  const fileName = `${Date.now()}_${file.name}`;
+  const filePath = path.join(process.cwd(), 'public', 'schoolImages', fileName);
+  
+  // Create directory if it doesn't exist
+  const dir = path.dirname(filePath);
+  if (!require('fs').existsSync(dir)) {
+    require('fs').mkdirSync(dir, { recursive: true });
+  }
+  
+  await writeFile(filePath, data);
+  return `/schoolImages/${fileName}`;
+};
+
 export async function POST(req) {
   try {
     const formData = await req.formData();
@@ -35,24 +50,11 @@ export async function POST(req) {
       return Response.json({ message: 'Invalid email format' }, { status: 400 });
     }
     
-    let imagePath = '';
+    let imagePath = null;
     
     // Handle image upload
     if (image && image.size > 0) {
-      const bytes = await image.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-      
-      // Generate unique filename
-      const fileName = `${Date.now()}_${image.name}`;
-      const filePath = path.join(process.cwd(), 'public', 'schoolImages', fileName);
-      
-      // Ensure directory exists
-      const dir = path.dirname(filePath);
-      require('fs').mkdirSync(dir, { recursive: true });
-      
-      // Save the file
-      await writeFile(filePath, buffer);
-      imagePath = `/schoolImages/${fileName}`;
+      imagePath = await saveFile(image);
     }
     
     // Insert into database
@@ -66,10 +68,11 @@ export async function POST(req) {
     
     return Response.json({ 
       message: 'School added successfully',
+      schoolId: result.insertId,
       imagePath: imagePath
     }, { status: 200 });
   } catch (error) {
     console.error('Error in API route:', error);
-    return Response.json({ message: 'Internal server error' }, { status: 500 });
+    return Response.json({ message: 'Internal server error', error: error.message }, { status: 500 });
   }
 }
